@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 提示詞產生器｜漢華中學</title>
+  <style>
+    :root {
+      --teal-900: #0f4c5c;
+      --teal-700: #1a6b7a;
+      --teal-500: #2a9d8f;
+      --teal-100: #e6f4f2;
+      --teal-50: #f2faf9;
+      --blue-600: #2c7a9e;
+      --ink: #1a2b32;
+      --muted: #5a6f78;
+      --border: #c5dde0;
+      --card: #ffffff;
+      --warn: #8a5a00;
+      --warn-bg: #fff8e8;
+      --radius: 12px;
+      --shadow: 0 2px 12px rgba(15, 76, 92, 0.08);
+      --focus: 0 0 0 3px rgba(42, 157, 143, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "PingFang TC", "Hiragino Sans CNS", "Noto Sans TC",
+        "Microsoft JhengHei", "Heiti TC", system-ui, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, var(--teal-50) 0%, #eef5f7 40%, #f7fafb 100%);
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 1.25rem 1.1rem 3rem;
+    }
+
+    header.hero {
+      background: linear-gradient(135deg, var(--teal-900), var(--teal-700) 55%, var(--blue-600));
+      color: #fff;
+      border-radius: calc(var(--radius) + 4px);
+      padding: 1.6rem 1.4rem 1.45rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.25rem;
+    }
+
+    header.hero h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    header.hero .sub {
+      margin: 0;
+      opacity: 0.92;
+      font-size: 0.98rem;
+    }
+
+    header.hero .badge {
+      display: inline-block;
+      margin-top: 0.75rem;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.15rem;
+      margin-bottom: 1.1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      margin: 0 0 0.65rem;
+      font-size: 1.12rem;
+      color: var(--teal-900);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .card h2 .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.55rem;
+      height: 1.55rem;
+      border-radius: 50%;
+      background: var(--teal-100);
+      color: var(--teal-700);
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .intro p { margin: 0.45rem 0; color: var(--muted); }
+    .intro strong { color: var(--ink); }
+
+    .notice {
+      background: var(--warn-bg);
+      border: 1px solid #f0d9a0;
+      color: var(--warn);
+      border-radius: 8px;
+      padding: 0.7rem 0.85rem;
+      font-size: 0.92rem;
+      margin-top: 0.75rem;
+    }
+
+    .cat-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--teal-700);
+      margin: 0.85rem 0 0.45rem;
+    }
+    .cat-label:first-of-type { margin-top: 0.2rem; }
+
+    .scene-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.55rem;
+    }
+
+    .scene-btn {
+      appearance: none;
+      border: 2px solid var(--border);
+      background: var(--teal-50);
+      color: var(--ink);
+      border-radius: 10px;
+      padding: 0.75rem 0.65rem;
+      font: inherit;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      min-height: 52px;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    }
+
+    .scene-btn:hover {
+      border-color: var(--teal-500);
+      background: #dff3ef;
+    }
+
+    .scene-btn:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    .scene-btn[aria-pressed="true"] {
+      border-color: var(--teal-700);
+      background: var(--teal-500);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(42, 157, 143, 0.35);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    @media (min-width: 640px) {
+      .form-grid.two { grid-template-columns: 1fr 1fr; }
+      .form-grid .full { grid-column: 1 / -1; }
+    }
+
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--teal-900);
+    }
+
+    label.field span.hint {
+      font-weight: 400;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      font: inherit;
+      font-weight: 400;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      background: #fff;
+      min-height: 44px;
+      width: 100%;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+      outline: none;
+      border-color: var(--teal-500);
+      box-shadow: var(--focus);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    button.primary,
+    button.secondary,
+    button.ghost {
+      appearance: none;
+      border: none;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 48px;
+      padding: 0.7rem 1.15rem;
+      transition: transform 0.1s, box-shadow 0.15s, background 0.15s;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--teal-700), var(--teal-500));
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(26, 107, 122, 0.3);
+    }
+
+    button.primary:hover { filter: brightness(1.05); }
+    button.primary:active { transform: translateY(1px); }
+
+    button.secondary {
+      background: #fff;
+      color: var(--teal-700);
+      border: 2px solid var(--teal-500);
+    }
+
+    button.secondary:hover { background: var(--teal-100); }
+
+    button.ghost {
+      background: var(--teal-100);
+      color: var(--teal-900);
+    }
+
+    button.ghost:hover { background: #d4ebe8; }
+
+    button:focus-visible {
+      outline: none;
+      box-shadow: var(--focus);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .output-box {
+      background: #f8fcfc;
+      border: 1.5px dashed var(--teal-500);
+      border-radius: 10px;
+      padding: 1rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      min-height: 120px;
+      color: var(--ink);
+    }
+
+    .output-box.empty {
+      color: var(--muted);
+      border-style: solid;
+      border-color: var(--border);
+      font-style: italic;
+    }
+
+    .output-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.65rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .copy-status {
+      color: var(--teal-700);
+      font-weight: 600;
+      min-height: 1.3em;
+    }
+
+    .tips ul {
+      margin: 0.4rem 0 0;
+      padding-left: 1.25rem;
+      color: var(--muted);
+    }
+
+    .tips li { margin: 0.35rem 0; }
+
+    .tips code {
+      background: var(--teal-100);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.88em;
+      color: var(--teal-900);
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      padding: 1.5rem 0.5rem 0.5rem;
+      border-top: 1px solid var(--border);
+      margin-top: 0.5rem;
+    }
+
+    footer strong { color: var(--teal-700); }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      border: 0;
+    }
+
+    #form-section[hidden],
+    #output-section[hidden] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>AI 提示詞產生器</h1>
+      <p class="sub">協助同工擬寫清晰、結構完整的 AI 提問提示，適用於課堂教學與校務行政。</p>
+      <span class="badge">漢華中學　·　供校內同工參考</span>
+    </header>
+
+    <section class="card intro" aria-labelledby="intro-title">
+      <h2 id="intro-title"><span class="num" aria-hidden="true">1</span> 簡介</h2>
+      <p>請先選擇應用場景，填寫關鍵資料，系統會產生一段可複製的提示詞（Prompt）。</p>
+      <p>將提示詞貼上 ChatGPT、Grok 或其他大型語言模型後，即可取得草稿內容。</p>
+      <div class="notice" role="note">
+        <strong>重要提醒：</strong>AI 產出僅供參考草稿，必須由教師審閱、修改及確認後，方可用於教學或對外溝通。請勿輸入學生姓名、身份證號碼、聯絡電話等敏感個人資料。
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="scene-title">
+      <h2 id="scene-title"><span class="num" aria-hidden="true">2</span> 選擇場景</h2>
+
+      <p class="cat-label">教學</p>
+      <div class="scene-grid" role="group" aria-label="教學場景">
+        <button type="button" class="scene-btn" data-scene="lesson" aria-pressed="false">教案／教學設計</button>
+        <button type="button" class="scene-btn" data-scene="worksheet" aria-pressed="false">工作紙／練習題</button>
+        <button type="button" class="scene-btn" data-scene="slides" aria-pressed="false">簡報大綱</button>
+        <button type="button" class="scene-btn" data-scene="feedback" aria-pressed="false">評語／回饋建議</button>
+        <button type="button" class="scene-btn" data-scene="sen" aria-pressed="false">分層／SEN 支援版教材</button>
+        <button type="button" class="scene-btn" data-scene="project" aria-pressed="false">跨科專題／專題研習指引</button>
+      </div>
+
+      <p class="cat-label">行政</p>
+      <div class="scene-grid" role="group" aria-label="行政場景">
+        <button type="button" class="scene-btn" data-scene="meeting" aria-pressed="false">會議議程／紀錄</button>
+        <button type="button" class="scene-btn" data-scene="notice" aria-pressed="false">通告／家長信</button>
+        <button type="button" class="scene-btn" data-scene="plan" aria-pressed="false">計劃書／報告段落</button>
+        <button type="button" class="scene-btn" data-scene="email" aria-pressed="false">電郵回覆草稿</button>
+        <button type="button" class="scene-btn" data-scene="event" aria-pressed="false">活動流程／檢討要點</button>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="secondary" id="btn-demo">填入示範例子</button>
+      </div>
+    </section>
+
+    <section class="card" id="form-section" hidden aria-labelledby="form-title">
+      <h2 id="form-title"><span class="num" aria-hidden="true">3</span> 填寫資料</h2>
+      <p id="scene-desc" style="margin:0 0 0.85rem;color:var(--muted);font-size:0.92rem;"></p>
+      <form id="prompt-form" class="form-grid two" novalidate>
+        <!-- fields injected by JS -->
+      </form>
+      <div class="actions">
+        <button type="button" class="primary" id="btn-generate">產生提示詞</button>
+        <button type="button" class="ghost" id="btn-clear">清除欄位</button>
+      </div>
+    </section>
+
+    <section class="card" id="output-section" hidden aria-labelledby="output-title">
+      <h2 id="output-title"><span class="num" aria-hidden="true">4</span> 產生結果</h2>
+      <div class="output-meta">
+        <span id="output-label">請先產生提示詞</span>
+        <span class="copy-status" id="copy-status" aria-live="polite"></span>
+      </div>
+      <div class="output-box empty" id="output-box" tabindex="0" role="textbox" aria-readonly="true" aria-label="產生的提示詞">尚未產生提示詞。請選擇場景、填寫資料後按「產生提示詞」。</div>
+      <div class="actions">
+        <button type="button" class="primary" id="btn-copy" disabled>複製提示詞</button>
+        <button type="button" class="secondary" id="btn-regen" disabled>按現有欄位重新產生</button>
+      </div>
+    </section>
+
+    <section class="card tips" aria-labelledby="tips-title">
+      <h2 id="tips-title"><span class="num" aria-hidden="true">5</span> 使用提示</h2>
+      <ul>
+        <li><strong>貼上方式：</strong>複製上方提示詞後，開啟 ChatGPT、Grok、Gemini 等工具，直接貼上並傳送即可。</li>
+        <li><strong>調整再產：</strong>若結果未盡理想，可修改上方欄位（例如語氣、字數、特別要求），再按「重新產生」。</li>
+        <li><strong>私隱與安全：</strong>請勿在提示詞或對話中輸入學生真實姓名、班號以外可識別身份的資料、家長聯絡方式或敏感校務內容。本頁在瀏覽器本地運作，不會上載資料。</li>
+        <li><strong>審閱責任：</strong>AI 可能出現事實錯誤或語氣不當之處，對外文件與評語務必經人手核對。</li>
+        <li><strong>會議示範：</strong>按「填入示範例子」可一鍵載入教學場景樣本，方便投影講解。</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><strong>漢華中學</strong>　·　供校內同工參考</p>
+      <p>AI 提示詞產生器（會議示範及自用版）　·　產出內容僅供草稿參考</p>
+    </footer>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+
+  /** @typedef {{ id: string, label: string, category: string, desc: string, fields: object, build: Function }} Scene */
+
+  var SCENES = {
+    lesson: {
+      id: "lesson",
+      label: "教案／教學設計",
+      category: "教學",
+      desc: "擬寫一節課或單元的教學目標、教學流程與評估建議。",
+      fields: {
+        subject: { label: "科目／組別", placeholder: "例：中國語文／中史組", required: true },
+        audience: { label: "對象（學生年級）", placeholder: "例：中三全級", required: true },
+        purpose: { label: "目的／課題", type: "textarea", placeholder: "例：教授議論文論點與論據的組織方法，並完成一段短文練習", required: true },
+        length: { label: "字數或格式", placeholder: "例：約 800–1000 字；含目標、流程、評估三部分" },
+        tone: { label: "語氣", type: "select", options: ["專業嚴謹", "清楚實用", "簡潔扼要", "啟發引導"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：須符合香港中學文憑試要求；加入分組討論；預留 10 分鐘總結" }
+      },
+      build: function (v) {
+        return [
+          "你是一位熟悉香港中學課程的資深教師與教學設計師。",
+          "請根據以下資料，以繁體中文書面語撰寫一份教案／教學設計草稿。",
+          "",
+          "【基本資料】",
+          "科目／組別：" + v.subject,
+          "對象：" + v.audience,
+          "目的／課題：" + v.purpose,
+          "字數或格式：" + (v.length || "適中，結構清晰即可"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請包含以下結構】",
+          "1. 學習目標（知識、技能、態度，宜具體可觀察）",
+          "2. 先備知識／導入活動",
+          "3. 教學流程（分時段說明教師與學生活動）",
+          "4. 評估方式與成功準則",
+          "5. 課業／延伸活動建議",
+          "6. 所需教材與資源",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿使用或要求提供真實學生姓名或其他可識別個人身份的敏感資料。",
+          "內容須適合香港中學課堂實際使用，用詞專業、條理分明。"
+        ].join("\n");
+      }
+    },
+    worksheet: {
+      id: "worksheet",
+      label: "工作紙／練習題",
+      category: "教學",
+      desc: "設計課堂工作紙、練習題或溫習題目，並附參考答案或評分建議。",
+      fields: {
+        subject: { label: "科目／組別", placeholder: "例：數學", required: true },
+        audience: { label: "對象（學生年級）", placeholder: "例：中一", required: true },
+        purpose: { label: "目的／課題範圍", type: "textarea", placeholder: "例：一元一次方程應用題；約 8–10 題，由淺入深", required: true },
+        length: { label: "字數或格式", placeholder: "例：一頁 A4；含填空、短答、應用題" },
+        tone: { label: "語氣", type: "select", options: ["清楚明確", "鼓勵探索", "考試導向", "生活化情境"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：每題附簡短提示；最後兩題具挑戰性；附參考答案" }
+      },
+      build: function (v) {
+        return [
+          "你是一位香港中學" + v.subject + "科教師，擅長設計層次分明的課業。",
+          "請以繁體中文書面語設計一份工作紙／練習題草稿。",
+          "",
+          "【基本資料】",
+          "科目：" + v.subject,
+          "對象：" + v.audience,
+          "目的／課題：" + v.purpose,
+          "格式要求：" + (v.length || "適合一課節內完成"),
+          "語氣／風格：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請輸出】",
+          "1. 工作紙標題與簡短指引（給學生）",
+          "2. 題目（標明題號、分數建議；由易至難排列）",
+          "3. 教師用參考答案或評分要點（另開一節，標明「教師用」）",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿要求或載入真實學生個人資料。",
+          "題目須符合香港中學程度，用詞準確，避免歧義。"
+        ].join("\n");
+      }
+    },
+    slides: {
+      id: "slides",
+      label: "簡報大綱",
+      category: "教學",
+      desc: "擬寫課堂或分享會簡報的分頁大綱與講者備註。",
+      fields: {
+        subject: { label: "科目／組別／場合", placeholder: "例：通識／班主任課／科組分享", required: true },
+        audience: { label: "對象", placeholder: "例：中四學生／全體教師", required: true },
+        purpose: { label: "目的／主題", type: "textarea", placeholder: "例：介紹專題研習步驟與 Rubric", required: true },
+        length: { label: "字數或格式", placeholder: "例：約 10–12 頁；每頁要點不多於 5 點" },
+        tone: { label: "語氣", type: "select", options: ["清晰簡潔", "互動啟發", "正式莊重", "輕鬆易明"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：加入思考問題；預留討論時間；避免過多文字" }
+      },
+      build: function (v) {
+        return [
+          "你是一位善於視覺化教學的香港中學教師。",
+          "請以繁體中文書面語撰寫一份簡報大綱草稿（非投影片檔案本身）。",
+          "",
+          "【基本資料】",
+          "科目／場合：" + v.subject,
+          "對象：" + v.audience,
+          "主題／目的：" + v.purpose,
+          "篇幅／格式：" + (v.length || "約 8–12 頁"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請按頁列出】",
+          "每一頁包含：頁碼、頁面標題、要點條列、建議圖像／圖表、講者備註（可選）。",
+          "開首須有標題頁與學習／分享目標；結尾須有總結與延伸思考／問答。",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿在大綱中加入真實學生姓名或敏感個人資料。",
+          "要點宜精煉，方便投影閱讀。"
+        ].join("\n");
+      }
+    },
+    feedback: {
+      id: "feedback",
+      label: "評語／回饋建議",
+      category: "教學",
+      desc: "草擬具建設性的作業評語、口頭回饋框架或成績報告用語。",
+      fields: {
+        subject: { label: "科目／組別", placeholder: "例：英國語文／視覺藝術", required: true },
+        audience: { label: "對象", placeholder: "例：中二學生（請用「該生」等代稱，勿填真實姓名）", required: true },
+        purpose: { label: "目的／評核重點", type: "textarea", placeholder: "例：作文評語，聚焦結構、論據與文句；成績約屬中上", required: true },
+        length: { label: "字數或格式", placeholder: "例：約 80–120 字；或「優點＋改善建議＋鼓勵」三段" },
+        tone: { label: "語氣", type: "select", options: ["鼓勵而具體", "嚴格而公平", "溫和正面", "精簡專業"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：避免空泛讚美；須指出一項可改進之處；適合寫在習作末頁" }
+      },
+      build: function (v) {
+        return [
+          "你是一位重視形成性評估的香港中學教師。",
+          "請以繁體中文書面語草擬評語／回饋建議。",
+          "",
+          "【基本資料】",
+          "科目：" + v.subject,
+          "對象描述（請用代稱，勿用真實姓名）：" + v.audience,
+          "評核重點／目的：" + v.purpose,
+          "長度／格式：" + (v.length || "約 80–150 字"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請輸出】",
+          "1. 一則完整評語草稿",
+          "2. 兩至三個可替換的句子變體（方便因應不同表現調整）",
+          "3. 一句口頭回饋可用短句（可選）",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請一律使用「該生」「同學」等代稱，切勿虛構或要求真實學生姓名。",
+          "回饋須具體、可操作，避免空泛或傷害自尊的用語。"
+        ].join("\n");
+      }
+    },
+    sen: {
+      id: "sen",
+      label: "分層／SEN 支援版教材",
+      category: "教學",
+      desc: "將教材調適為分層任務，或擬寫支援有特殊教育需要學生的版本。",
+      fields: {
+        subject: { label: "科目／組別", placeholder: "例：科學／中國歷史", required: true },
+        audience: { label: "對象", placeholder: "例：中二；部分學生有讀寫困難／專注力困難（勿填姓名）", required: true },
+        purpose: { label: "目的／原教材重點", type: "textarea", placeholder: "例：將原有閱讀理解篇章改為分層工作紙（基礎／進階）", required: true },
+        length: { label: "字數或格式", placeholder: "例：基礎版一頁；進階版加兩題延伸" },
+        tone: { label: "語氣", type: "select", options: ["支援而尊重", "清楚步驟化", "鼓勵自主", "精簡直接"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：字體建議較大；指令分步；提供句式框架；不標籤學生" }
+      },
+      build: function (v) {
+        return [
+          "你是一位具備特殊教育支援經驗的香港中學教師。",
+          "請以繁體中文書面語設計分層／SEN 支援版教材或調適建議草稿。",
+          "",
+          "【基本資料】",
+          "科目：" + v.subject,
+          "對象與支援需要（請勿使用真實姓名）：" + v.audience,
+          "目的／原教材重點：" + v.purpose,
+          "格式：" + (v.length || "清晰分層即可"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請輸出】",
+          "1. 調適原則說明（簡短）",
+          "2. 基礎／支援版任務內容",
+          "3. 原班／進階版對照要點",
+          "4. 課堂施行建議（座位、時間、同儕支援等，宜務實）",
+          "5. 評估調適注意事項",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿輸入或虛構學生真實姓名、診斷書細節等敏感資料；以需要類型概括描述即可。",
+          "用語須尊重學生，避免標籤化或貶抑。"
+        ].join("\n");
+      }
+    },
+    project: {
+      id: "project",
+      label: "跨科專題／專題研習指引",
+      category: "教學",
+      desc: "擬寫跨學科專題或專題研習的題目設計、進程指引、評估準則與學生指導要點。",
+      fields: {
+        subject: { label: "科目／組別", placeholder: "例：中史＋地理＋中文；或 STEM 組聯同數學、科學（可註明跨科組合）", required: true },
+        audience: { label: "對象（學生年級）", placeholder: "例：中二全級／中四選修組", required: true },
+        purpose: { label: "目的／專題主題", type: "textarea", placeholder: "例：以「社區可持續發展」為題，完成小組探究報告與簡報；培養資料蒐集、批判思考與協作能力", required: true },
+        length: { label: "字數或格式", placeholder: "例：教師指引約 1000 字；含進程表、Rubric、學生檢查清單" },
+        tone: { label: "語氣", type: "select", options: ["啟發探究", "清楚步驟化", "嚴謹學術", "協作引導"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：為期四至六週；須列各科貢獻點；含同儕互評；適合香港中學專題研習習慣" }
+      },
+      build: function (v) {
+        return [
+          "你是一位熟悉香港中學跨學科學習與專題研習（Project Learning）的資深教師／課程統籌。",
+          "請以繁體中文書面語撰寫一份跨科專題／專題研習指引草稿，供教師使用及改編。",
+          "",
+          "【基本資料】",
+          "涉及科目／組別（可為多科）：" + v.subject,
+          "對象：" + v.audience,
+          "目的／專題主題：" + v.purpose,
+          "字數或格式：" + (v.length || "結構完整、便於印發或上載校內平台"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請包含以下結構】",
+          "1. 專題背景與探究問題（Driving Question），並說明跨科聯繫點",
+          "2. 學習目標（知識、技能、態度／共通能力，宜具體可觀察）",
+          "3. 建議進程／時間表（分週或分階段：啟動、蒐集資料、分析、成果製作、展示）",
+          "4. 各科／組別可負責的教學支援與課時建議（若只涉單科專題，則說明科內模組）",
+          "5. 學生指引：分組建議、角色分工、資料來源注意、學術誠信",
+          "6. 評估設計：評核準則（Rubric）大綱、形成性與總結性評估、同儕／自評要點",
+          "7. 成果形式建議（書面報告、簡報、展板、短片等）及展示安排",
+          "8. 教師注意事項：安全、外出考察（如適用）、家長知情、調適與支援",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿使用或要求提供真實學生姓名或其他可識別個人身份的敏感資料。",
+          "內容須符合香港中學專題研習常規，強調探究過程多於抄錄答案，用詞專業、條理分明。"
+        ].join("\n");
+      }
+    },
+    meeting: {
+      id: "meeting",
+      label: "會議議程／紀錄",
+      category: "行政",
+      desc: "草擬科組或委員會會議議程，或整理會議紀錄框架。",
+      fields: {
+        subject: { label: "組別／委員會", placeholder: "例：學術事務組／訓導組", required: true },
+        audience: { label: "對象（與會者）", placeholder: "例：全體科主任／本組成員", required: true },
+        purpose: { label: "目的／會議主題", type: "textarea", placeholder: "例：檢討上學期測考安排，並商討下學期公開考試支援", required: true },
+        length: { label: "字數或格式", placeholder: "例：議程約 1 頁；或「議程＋紀錄範本」" },
+        tone: { label: "語氣", type: "select", options: ["正式莊重", "簡潔務實", "協商討論", "清晰條列"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：每項標明時限與負責人欄；預留「其他事項」" }
+      },
+      build: function (v) {
+        return [
+          "你是一位熟悉香港中學校務運作的行政人員／科主任。",
+          "請以繁體中文書面語草擬會議文件草稿。",
+          "",
+          "【基本資料】",
+          "組別／委員會：" + v.subject,
+          "與會對象：" + v.audience,
+          "會議目的／主題：" + v.purpose,
+          "格式：" + (v.length || "議程為主，可附紀錄欄位"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請輸出】",
+          "1. 會議議程（含開會、各討論事項、報告、其他事項、散會）",
+          "2. 每項建議時限與「負責人／跟進」欄位",
+          "3. 會議紀錄可用空白框架（決議、行動項目、期限）",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿寫入真實個人敏感資料；負責人可用職銜或組別代稱。",
+          "用詞須符合校內公文習慣，條理清晰。"
+        ].join("\n");
+      }
+    },
+    notice: {
+      id: "notice",
+      label: "通告／家長信",
+      category: "行政",
+      desc: "草擬校內通告或致家長信函，語氣得體、資料齊全。",
+      fields: {
+        subject: { label: "發出單位", placeholder: "例：教務處／某科組／班主任", required: true },
+        audience: { label: "對象", placeholder: "例：全體中一至中三家長／中四學生及家長", required: true },
+        purpose: { label: "目的／事由", type: "textarea", placeholder: "例：通知家長晚會日期、時間、地點及回條安排", required: true },
+        length: { label: "字數或格式", placeholder: "例：約 350–500 字；含標題、正文、回條" },
+        tone: { label: "語氣", type: "select", options: ["正式有禮", "親切清晰", "簡潔直接", "鄭重通知"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：須列明日期時間地點；附回條欄；註明查詢電話由校方稍後填入" }
+      },
+      build: function (v) {
+        return [
+          "你是一位香港中學行政人員，擅長撰寫通告與家長信。",
+          "請以繁體中文書面語草擬通告／家長信草稿。",
+          "",
+          "【基本資料】",
+          "發出單位：" + v.subject,
+          "對象：" + v.audience,
+          "事由／目的：" + v.purpose,
+          "篇幅／格式：" + (v.length || "一頁為宜，可含回條"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請輸出】",
+          "1. 通告／信函標題",
+          "2. 完整正文（緣起、詳情、注意事項、聯絡／查詢說明）",
+          "3. 如適用：回條範本（家長簽署欄、日期欄）",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿填入真實學生姓名、家長電話或身份證等敏感資料；聯絡資料以「（請填寫）」占位即可。",
+          "日期、時間、地點等如未提供，請以括號提示使用者補上。"
+        ].join("\n");
+      }
+    },
+    plan: {
+      id: "plan",
+      label: "計劃書／報告段落",
+      category: "行政",
+      desc: "撰寫活動計劃、周年報告或計劃書中的指定段落。",
+      fields: {
+        subject: { label: "組別／範疇", placeholder: "例：生涯規劃組／STEM 組", required: true },
+        audience: { label: "對象（讀者）", placeholder: "例：校務會議／外間資助機構／同工傳閱", required: true },
+        purpose: { label: "目的／主題", type: "textarea", placeholder: "例：撰寫本學年閱讀推廣計劃的「目標」與「推行策略」兩段", required: true },
+        length: { label: "字數或格式", placeholder: "例：每段約 200 字；或整份大綱約 800 字" },
+        tone: { label: "語氣", type: "select", options: ["正式公文", "分析檢討", "前瞻規劃", "簡潔條列"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：須呼應學校關注事項；列出可量度成功指標" }
+      },
+      build: function (v) {
+        return [
+          "你是一位熟悉香港中學發展計劃與報告寫作的教師／中層人員。",
+          "請以繁體中文書面語草擬計劃書／報告段落草稿。",
+          "",
+          "【基本資料】",
+          "組別／範疇：" + v.subject,
+          "讀者對象：" + v.audience,
+          "主題／目的：" + v.purpose,
+          "字數／格式：" + (v.length || "結構完整、篇幅適中"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請視需要包含】",
+          "背景／理念、目標、策略／措施、時間表、資源、成功準則、評估方法、預期成效。",
+          "若使用者只要求部分段落，請聚焦該部分，並保持可嵌入完整文件的銜接語氣。",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿寫入可識別個人身份的敏感資料或未核實的數據；數據處可用「（待補）」標示。",
+          "用語須專業、客觀，適合校內傳閱或對外提交前再經人手修訂。"
+        ].join("\n");
+      }
+    },
+    email: {
+      id: "email",
+      label: "電郵回覆草稿",
+      category: "行政",
+      desc: "草擬對家長、同工或校外機構的電郵回覆。",
+      fields: {
+        subject: { label: "身分／組別", placeholder: "例：班主任／科主任／校務處", required: true },
+        audience: { label: "對象", placeholder: "例：家長（請勿填真實姓名）／友校同工", required: true },
+        purpose: { label: "目的／來信摘要", type: "textarea", placeholder: "例：家長查詢測驗範圍與補課安排，需禮貌說明並提供建議", required: true },
+        length: { label: "字數或格式", placeholder: "例：約 150–250 字；含主旨建議" },
+        tone: { label: "語氣", type: "select", options: ["有禮專業", "同理關顧", "簡潔明確", "正式謹慎"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：先致谢再答覆；避免承諾未有政策依據之事；邀請預約面談" }
+      },
+      build: function (v) {
+        return [
+          "你是一位香港中學教師／行政人員，需以電郵作專業溝通。",
+          "請以繁體中文書面語草擬電郵回覆草稿。",
+          "",
+          "【基本資料】",
+          "發件人身分／組別：" + v.subject,
+          "收件對象（請用代稱）：" + v.audience,
+          "來信摘要／回覆目的：" + v.purpose,
+          "篇幅：" + (v.length || "約 150–250 字"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請輸出】",
+          "1. 建議主旨列",
+          "2. 電郵正文（稱謂、開場、回應要點、後續安排、結尾敬語）",
+          "3. 如有需要：一句可選的跟進提示（給發件人自己核對用）",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿使用真實姓名、電郵地址或電話；稱謂可用「貴家長」「閣下」等。",
+          "內容須穩妥、不越權，涉及校策或個別個案時提醒使用者向校方確認。"
+        ].join("\n");
+      }
+    },
+    event: {
+      id: "event",
+      label: "活動流程／檢討要點",
+      category: "行政",
+      desc: "擬寫活動當日流程時間表，或活動後檢討的討論要點。",
+      fields: {
+        subject: { label: "組別／活動名稱", placeholder: "例：學生會／開放日／陸運會", required: true },
+        audience: { label: "對象", placeholder: "例：全體學生／來賓與家長／負責同工", required: true },
+        purpose: { label: "目的", type: "textarea", placeholder: "例：設計開放日當日流程；或草擬活動後檢討會議要點", required: true },
+        length: { label: "字數或格式", placeholder: "例：時間表由 09:00–13:00；或檢討要點 8–10 項" },
+        tone: { label: "語氣", type: "select", options: ["務實清晰", "檢討反思", "鼓舞團隊", "正式條列"], required: true },
+        extra: { label: "特別要求", type: "textarea", placeholder: "例：標明負責人欄；加入應變／安全注意；檢討須含「值得保留」與「改善建議」" }
+      },
+      build: function (v) {
+        return [
+          "你是一位有豐富活動籌辦經驗的香港中學教師。",
+          "請以繁體中文書面語草擬活動流程及／或檢討要點草稿。",
+          "",
+          "【基本資料】",
+          "組別／活動：" + v.subject,
+          "對象：" + v.audience,
+          "目的：" + v.purpose,
+          "格式：" + (v.length || "流程清晰、檢討具體"),
+          "語氣：" + v.tone,
+          "特別要求：" + (v.extra || "無"),
+          "",
+          "【請按使用者目的輸出相關部分】",
+          "A. 活動流程：時間、環節、地點、負責人、物資／注意事項",
+          "B. 檢討要點：目標達成、參加者反應、行政協調、安全、資源、來年建議",
+          "如目的偏重其一，可詳寫該部分，另一部分作簡表即可。",
+          "",
+          "【注意】",
+          "請用繁體中文書面語。",
+          "請勿列入真實學生或家長的個人敏感資料。",
+          "時間與地點如未提供，請以占位符提示補上。"
+        ].join("\n");
+      }
+    }
+  };
+
+  var DEMO = {
+    scene: "lesson",
+    values: {
+      subject: "中國語文",
+      audience: "中三全級",
+      purpose: "教授議論文「論點與論據」的組織方法，學生能完成一段約 150 字的論說短文，並認識至少兩種論據類型。",
+      length: "約 900 字；含學習目標、教學流程（40 分鐘）、評估與課業",
+      tone: "清楚實用",
+      extra: "加入 8 分鐘分組討論；預留黑板板書建議；評估須具體可觀察；適合香港中學課堂。"
+    }
+  };
+
+  var currentSceneId = null;
+  var formEl = document.getElementById("prompt-form");
+  var formSection = document.getElementById("form-section");
+  var outputSection = document.getElementById("output-section");
+  var outputBox = document.getElementById("output-box");
+  var outputLabel = document.getElementById("output-label");
+  var copyStatus = document.getElementById("copy-status");
+  var sceneDesc = document.getElementById("scene-desc");
+  var btnGenerate = document.getElementById("btn-generate");
+  var btnCopy = document.getElementById("btn-copy");
+  var btnRegen = document.getElementById("btn-regen");
+  var btnClear = document.getElementById("btn-clear");
+  var btnDemo = document.getElementById("btn-demo");
+  var lastPrompt = "";
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function selectScene(id, preserveValues) {
+    var scene = SCENES[id];
+    if (!scene) return;
+
+    var oldValues = preserveValues ? readValues() : null;
+    currentSceneId = id;
+
+    document.querySelectorAll(".scene-btn").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", btn.getAttribute("data-scene") === id ? "true" : "false");
+    });
+
+    sceneDesc.textContent = "目前場景：「" + scene.label + "」—— " + scene.desc;
+    renderFields(scene, oldValues && preserveValues ? oldValues : null);
+    formSection.hidden = false;
+    outputSection.hidden = false;
+
+    if (!lastPrompt) {
+      outputBox.classList.add("empty");
+      outputBox.textContent = "填妥資料後按「產生提示詞」。可隨時修改欄位後重新產生。";
+      outputLabel.textContent = "場景：" + scene.label;
+      btnCopy.disabled = true;
+      btnRegen.disabled = true;
+    } else {
+      outputLabel.textContent = "場景：" + scene.label + "（可修改後重新產生）";
+      btnRegen.disabled = false;
+    }
+
+    formSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function renderFields(scene, prefill) {
+    var html = "";
+    var keys = Object.keys(scene.fields);
+    keys.forEach(function (key) {
+      var f = scene.fields[key];
+      var val = prefill && prefill[key] != null ? prefill[key] : "";
+      var req = f.required ? ' <span class="sr-only">（必填）</span>' : "";
+      var full = f.type === "textarea" ? " full" : "";
+      html += '<label class="field' + full + '" for="f-' + key + '">';
+      html += escapeHtml(f.label) + req;
+      if (f.hint) html += '<span class="hint">' + escapeHtml(f.hint) + "</span>";
+
+      if (f.type === "textarea") {
+        html += '<textarea id="f-' + key + '" name="' + key + '" rows="3" placeholder="' +
+          escapeHtml(f.placeholder || "") + '"' + (f.required ? " required" : "") + ">" +
+          escapeHtml(val) + "</textarea>";
+      } else if (f.type === "select") {
+        html += '<select id="f-' + key + '" name="' + key + '"' + (f.required ? " required" : "") + ">";
+        html += '<option value="">請選擇</option>';
+        (f.options || []).forEach(function (opt) {
+          html += '<option value="' + escapeHtml(opt) + '"' +
+            (val === opt ? " selected" : "") + ">" + escapeHtml(opt) + "</option>";
+        });
+        html += "</select>";
+      } else {
+        html += '<input type="text" id="f-' + key + '" name="' + key + '" placeholder="' +
+          escapeHtml(f.placeholder || "") + '" value="' + escapeHtml(val) + '"' +
+          (f.required ? " required" : "") + " />";
+      }
+      html += "</label>";
+    });
+    formEl.innerHTML = html;
+  }
+
+  function readValues() {
+    var data = {};
+    if (!formEl) return data;
+    var els = formEl.querySelectorAll("input, select, textarea");
+    els.forEach(function (el) {
+      data[el.name] = (el.value || "").trim();
+    });
+    return data;
+  }
+
+  function validate(scene, values) {
+    var missing = [];
+    Object.keys(scene.fields).forEach(function (key) {
+      if (scene.fields[key].required && !values[key]) {
+        missing.push(scene.fields[key].label);
+      }
+    });
+    return missing;
+  }
+
+  function generate() {
+    if (!currentSceneId) {
+      copyStatus.textContent = "請先選擇場景。";
+      return;
+    }
+    var scene = SCENES[currentSceneId];
+    var values = readValues();
+    var missing = validate(scene, values);
+    if (missing.length) {
+      copyStatus.textContent = "請填寫：" + missing.join("、");
+      var firstKey = Object.keys(scene.fields).find(function (k) {
+        return scene.fields[k].required && !values[k];
+      });
+      if (firstKey) {
+        var el = document.getElementById("f-" + firstKey);
+        if (el) el.focus();
+      }
+      return;
+    }
+
+    lastPrompt = scene.build(values);
+    outputBox.classList.remove("empty");
+    outputBox.textContent = lastPrompt;
+    outputLabel.textContent = "場景：" + scene.label + "　·　已產生（書面語提示詞）";
+    btnCopy.disabled = false;
+    btnRegen.disabled = false;
+    copyStatus.textContent = "已產生，可按「複製提示詞」。";
+    outputSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function copyPrompt() {
+    if (!lastPrompt) return;
+
+    function ok() {
+      copyStatus.textContent = "已複製到剪貼簿。";
+      btnCopy.textContent = "已複製";
+      setTimeout(function () {
+        btnCopy.textContent = "複製提示詞";
+      }, 1800);
+    }
+
+    function fail() {
+      // Fallback: select text in output box for manual copy
+      try {
+        var range = document.createRange();
+        range.selectNodeContents(outputBox);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        copyStatus.textContent = "請使用 Ctrl+C／⌘C 手動複製已選取的文字。";
+      } catch (e) {
+        copyStatus.textContent = "複製失敗，請手動選取上方文字。";
+      }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lastPrompt).then(ok).catch(fail);
+    } else {
+      // Older browsers
+      var ta = document.createElement("textarea");
+      ta.value = lastPrompt;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        if (document.execCommand("copy")) ok();
+        else fail();
+      } catch (e) {
+        fail();
+      }
+      document.body.removeChild(ta);
+    }
+  }
+
+  function clearFields() {
+    if (!currentSceneId) return;
+    renderFields(SCENES[currentSceneId], null);
+    copyStatus.textContent = "欄位已清除。";
+  }
+
+  function fillDemo() {
+    selectScene(DEMO.scene, false);
+    renderFields(SCENES[DEMO.scene], DEMO.values);
+    // Ensure selects get value
+    Object.keys(DEMO.values).forEach(function (key) {
+      var el = document.getElementById("f-" + key);
+      if (el) el.value = DEMO.values[key];
+    });
+    generate();
+    copyStatus.textContent = "已填入示範例子並產生提示詞，方便會議投影。";
+  }
+
+  document.querySelectorAll(".scene-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      selectScene(btn.getAttribute("data-scene"), false);
+    });
+  });
+
+  btnGenerate.addEventListener("click", generate);
+  btnRegen.addEventListener("click", generate);
+  btnCopy.addEventListener("click", copyPrompt);
+  btnClear.addEventListener("click", clearFields);
+  btnDemo.addEventListener("click", fillDemo);
+
+  formEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && e.target.tagName !== "TEXTAREA" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      generate();
+    }
+  });
+})();
+  </script>
+</body>
+</html>
